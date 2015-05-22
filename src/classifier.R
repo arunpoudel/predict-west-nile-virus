@@ -19,7 +19,9 @@ trainlength = nrow(train)
 x = rbind(train, test)
 
 x$Year <- as.numeric(lapply(strsplit(x$Date, "-"), function(x) x[1]))
+x$Month <- as.numeric(lapply(strsplit(x$Date, "-"), function(x) x[2]))
 
+x$Month 			 <- x$Month
 x$year               <- x$Year
 x$restuans           <- x$Species == 'CULEX RESTUANS'
 x$pipiens            <- x$Species == 'CULEX PIPIENS'
@@ -29,6 +31,7 @@ x$latitude           <- x$Latitude
 x$longitude          <- x$Longitude
 x$block              <- x$Block
 
+x$Month <- NULL
 x$Year <- NULL
 x$Date <- NULL
 x$NumMosquitos <- NULL
