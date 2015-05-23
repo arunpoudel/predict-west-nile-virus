@@ -18,11 +18,12 @@ trainlength = nrow(train)
 
 x = rbind(train, test)
 
-x$Year <- as.numeric(lapply(strsplit(x$Date, "-"), function(x) x[1]))
+#x$Year <- as.numeric(lapply(strsplit(x$Date, "-"), function(x) x[1]))
 x$Month <- as.numeric(lapply(strsplit(x$Date, "-"), function(x) x[2]))
+x$Week <- as.numeric(strftime(x$Date, format="%W"))
 
-x$Month 			 <- x$Month
-x$year               <- x$Year
+x$month 			 <- x$Month
+#x$year               <- x$Year
 x$restuans           <- x$Species == 'CULEX RESTUANS'
 x$pipiens            <- x$Species == 'CULEX PIPIENS'
 x$both               <- x$Species == 'CULEX PIPIENS/RESTUANS'
@@ -32,7 +33,7 @@ x$longitude          <- x$Longitude
 x$block              <- x$Block
 
 x$Month <- NULL
-x$Year <- NULL
+#x$Year <- NULL
 x$Date <- NULL
 x$NumMosquitos <- NULL
 x$Species <- NULL
@@ -45,6 +46,8 @@ x$Trap <- NULL
 x$NumMosquitos <- NULL
 x$Street <- NULL
 
+print(x[1:20,])
+
 x = x[,-1]
 
 x = as.matrix(x)
@@ -52,7 +55,7 @@ x = as.matrix(x)
 print("Training the model")
 
 param <- list("objective" = "binary:logistic",
-              "eval_metric" = "logloss",
+              "eval_metric" = "auc",
               "nthread" = 16,
               "eta" = .025,
               "max_depth" = 10,
@@ -60,9 +63,8 @@ param <- list("objective" = "binary:logistic",
               "gamma" = .8,
               "min_child_weight" = 3,
               "subsample" = .9,
-              "colsample_bytree" = .45)
-
-
+              "colsample_bytree" = .45,
+              "scale_pos_weight" = sum(y==0) / sum(y==1))
 
 nround = 200
 bst = xgboost(param=param, data = x[1:trainlength,], label = y, nrounds=nround, verbose = 2)
