@@ -1,7 +1,7 @@
 require(xgboost)
 require(caret)
 
-set.seed(555)
+set.seed(2000)
 
 print("Preparing Data")
 
@@ -22,16 +22,13 @@ trainlength = nrow(train)
 
 x = rbind(train, test)
 
+x$Year <- as.numeric(lapply(strsplit(x$Date, "-"), function(x) x[1]))
 x$Month <- as.numeric(lapply(strsplit(x$Date, "-"), function(x) x[2]))
 x$Week <- as.numeric(strftime(x$Date, format="%W"))
 
-x$Date <- NULL
-x$NumMosquitos <- NULL
-#x$Species <- NULL
 x$Latitude <- NULL
 x$Longitude <- NULL
-x$Address <- NULL
-#x$Block <- NULL
+x$Date <- NULL
 x$AddressNumberAndStreet <- NULL
 x$Street <- NULL
 x$AddressAccuracy <- NULL
@@ -51,20 +48,21 @@ print("Training the model")
 param <- list("objective" = "binary:logistic",
               "eval_metric" = "auc",
               "nthread" = 16,
-              "eta" = .025,
+              "eta" = .02,
               "max_depth" = 10,
               "lambda_bias" = 0,
               "gamma" = .8,
               "min_child_weight" = 3,
-              "subsample" = .9,
+              "subsample" = .6,
               "colsample_bytree" = .45,
               "scale_pos_weight" = sum(y==0) / sum(y==1),
-              "base_score" = "0.7")
+              "base_score" = "0.8")
 
-nround = 500
-bst = xgboost(param=param, data = x[1:trainlength,], label = y, nrounds=nround, verbose = 0)
+nround = 700
+bst = xgboost(param=param, data = x[1:trainlength,], label = y, nrounds=nround, verbose = 2)
 
 importance_matrix <- xgb.importance(headers, model = bst)
+importance_matrix <- subset(importance_matrix, Gain > 0.01)
 xgb.plot.importance(importance_matrix)
 
 print("Making prediction")
